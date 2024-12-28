@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import 'flowbite';
 import { toast, Slide } from 'react-toastify';
+import apiBaseURL from '../../api.config';
+import Title from "../../components/Title"
 
 import {
   LineChart,
@@ -12,7 +14,7 @@ import {
   Tooltip,
 } from "recharts";
 // import "./App.css"; // Assuming you have an App.css for your styles
-import "./BillForm.css"; // Assuming you have a BillForm.css for your styles
+import "./MeterLogs.css"; // Assuming you have a BillForm.css for your styles
 
 const data = [
   { name: "11/11/24", uv: 400 },
@@ -41,9 +43,12 @@ function BillForm() {
 
   //shows power if set to true or energy if set to false
   const [showPower, setShowPower] = useState(true);
-  const [yComponent, setYComponent] = useState("power");
   const [renderGraph, setRenderGraph] = useState(false);
-  const [powerEnergyButton, setPowerEnergyButton] = useState("Show Power")
+
+  const [yComponent, setYComponent] = useState("power");
+  const [powerPlotButton, setPowerPlotButton] = useState("Show Power graph");
+
+  const [showItem, setShowItem] = useState(null); // null | 'table' | 'graph'
 
   function GetFromAPI(path, authToken) {
     //authObject --> Set x-auth-token in  header as key and token as value
@@ -90,7 +95,7 @@ function BillForm() {
     console.log("End Date:", Date2Epoch(endDate));
     
     // Call the API to get the logs
-    const apiUrl = `https://sea-lion-app-hejjs.ondigitalocean.app/admin/log-data/${meterId}/${Date2Epoch(startDate)}/${Date2Epoch(endDate)}`; // Change this to the actual API URL
+    const apiUrl = `${apiBaseURL}/admin/log-data/${meterId}/${Date2Epoch(startDate)}/${Date2Epoch(endDate)}`; // Change this to the actual API URL
     console.log(`API URL: ${apiUrl}`)
 
     GetFromAPI(apiUrl, localStorage.getItem('token'));    
@@ -103,6 +108,8 @@ function BillForm() {
     else {
       console.log("Response is")
       
+      setShowItem("table");
+      setPowerPlotButton("Show Power graph");
   
       if (responseData.data) {
         let labels = responseData.labels
@@ -117,11 +124,15 @@ function BillForm() {
         console.log(labels_and_sorted)
         setMeterData(labels_and_sorted)
         let graphBuffer = []
+
+        console.table(sorted)
+
         sorted.forEach((row) => {
-          if(showPower)
-            graphBuffer.push({time: row[2], power: row[5]})
-          else
-            graphBuffer.push({time: row[2], energy: row[6]})
+          // console.log({time: row[2], power: row[6]})
+
+          //hack
+          if(row[2] != "Invalid Date")
+            graphBuffer.push({time: row[2], power: row[6]})
         })
         setGraphData(graphBuffer)
 
@@ -144,22 +155,10 @@ function BillForm() {
       }
     }
   },[responseData])
-
-  useEffect(()=>{
-    //set yComponent to energy if showPower is false
-    if(showPower){
-      setYComponent("power")
-      setPowerEnergyButton("Show energy")
-    }
-    else{
-      setYComponent("energy")
-      setPowerEnergyButton("Show power")
-    }
-  }, [showPower])
  
   return (
     <>
-      <h1 className="Title text-3xl text-center">SMART ENERGY METER - ADMIN CONSOLE</h1>
+      <Title PageTitle={"Check Meter Logs"}/>
       <div className="flex flex-col">
         <div className="bill-form flex flex-col mt-12 md:flex-row md:mx-72 space-x-2">
           <div className="flex-auto">
@@ -171,7 +170,7 @@ function BillForm() {
               onChange={(e) => setMeterId(e.target.value)}
             />
           </div>
-          <div className="flex-auto">
+          <div className="flex-initial">
             <DatePicker
               selected={startDate}
               className="text-center rounded-xl"
@@ -196,33 +195,28 @@ function BillForm() {
               <button style={buttonStyle} onClick={handleGetLogs}>Get Logs</button>
           </div>
           <div className="flex-auto">
-            <button style={buttonStyle} onClick={()=> setShowPower(!showPower)}>{powerEnergyButton} graph</button>
+            <button style={buttonStyle} onClick={()=>{  
+              if(showItem === 'table'){
+                setShowItem('graph')
+                setPowerPlotButton("Show Table")
+              }  
+              else
+                {
+                  setShowItem('table')
+                  setPowerPlotButton("Show Power graph")
+                }
+              }}>
+                {powerPlotButton}</button>
           </div>
         </div>      
 
-        <div className="mt-12">
+        {(showItem === 'table') && <div className="mt-12">
           <DataTable data={meterData} />
-        </div>
-        {renderGraph && 
-        <div className="w-lg mt-12 mx-auto md:hidden">
+        </div>}
+        {(showItem === 'graph') && 
+        <div className="w-lg mt-12 mx-auto">
           <LineChart
-            width={400}
-            height={300}
-            data={graphData}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-          >
-            <Line type="monotone" dataKey={yComponent} stroke="#8884d8" />
-            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-            <XAxis dataKey="time" />
-            <YAxis />
-            <Tooltip />
-          </LineChart>
-        </div>
-        }
-        {renderGraph &&
-        <div className="w-lg mt-12 mx-auto hidden md:block">
-          <LineChart
-            width={800}
+            width={1000}
             height={300}
             data={graphData}
             margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
@@ -238,18 +232,7 @@ function BillForm() {
       </div>
     </>
   );
-}
-
-const PowerInfo = (props) => {
-  const { date, energy } = props;
-
-  return (
-    <div className="flex flex-row text-center mt-4 space-x-0">
-      <div className="flex-auto margin">{date}</div>
-      <div className="flex-auto">{energy}</div>
-    </div>
-  );
-}; 
+} 
 
 function DataTable({ data }) {
   if (data.length === 0) {

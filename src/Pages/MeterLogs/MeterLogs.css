@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-.bill-form input,
+
 .bill-form button {
     margin: 10px;
     padding: 10px;
@@ -17,14 +17,12 @@
 
 .bill-form input[type="text"],
 textarea {
-
     background-color: #cecece2f;
-
 }
 
 
 .bill-form button {
-    background-color: #53b6fc;
+    background-color: #3b71ca;
     color: white;
     cursor: pointer;
     width: 50%;
