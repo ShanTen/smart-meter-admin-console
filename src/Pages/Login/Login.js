@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import { toast, Slide } from 'react-toastify';
+import apiBaseURL from '../../api.config';
 
 function Login() {
     const [username, setUsername] = useState('');
@@ -17,7 +18,7 @@ function Login() {
     }, [isAuthSuccessful]);
 
     // The login API URL
-    const apiRoute = 'https://sea-lion-app-hejjs.ondigitalocean.app/admin';
+    const apiRoute = `${apiBaseURL}/admin`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
