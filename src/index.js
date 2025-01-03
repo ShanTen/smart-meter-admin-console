@@ -10,11 +10,11 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <>
     <App />
     <ToastContainer
       position="bottom-center"
-      autoClose={5000}
+      autoClose={3000}
       hideProgressBar
       newestOnTop={false}
       closeOnClick
@@ -28,7 +28,7 @@ root.render(
       bodyClassName = "toast-body"
       closeButton={false}
     />
-  </React.StrictMode>
+  </>
 );
 
 // If you want to start measuring performance in your app, pass a function
